@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Output directories (keep structure but ignore contents)
+segments/videos/*.mp4
+segments/videos/*.avi
+segments/videos/*.mov
+segments/frames/*/
+unified_dataset/images/*.jpg
+unified_dataset/metadata/*.json
+unified_dataset/*.json
+unified_dataset/*.txt
+
+# Keep directory structure
+!segments/videos/.gitkeep
+!segments/frames/.gitkeep
+!unified_dataset/images/.gitkeep
+!unified_dataset/metadata/.gitkeep
+
+# Large video files in videos directory
+videos/*.mp4
+videos/*.avi
+videos/*.mov
+videos/*.MOV
+!videos/README.md
