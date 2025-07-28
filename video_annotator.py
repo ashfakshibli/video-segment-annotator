@@ -43,6 +43,7 @@ class VideoSegmentAnnotator:
         self.video_label = None
         self.progress_var = None
         self.time_var = None
+        self.frame_info_var = None
         
         # Project paths
         self.project_dir = Path(__file__).parent
@@ -53,6 +54,18 @@ class VideoSegmentAnnotator:
         self.setup_directories()
         self.setup_ui()
         self.load_videos()
+        
+    def choose_video_folder(self):
+        """Let user choose a different video folder"""
+        folder_path = filedialog.askdirectory(
+            title="Choose Video Folder",
+            initialdir=str(self.videos_dir)
+        )
+        
+        if folder_path:
+            self.videos_dir = Path(folder_path)
+            self.status_var.set(f"Changed video folder to: {self.videos_dir}")
+            self.load_videos()
         
     def setup_directories(self):
         """Create necessary directories"""
@@ -82,7 +95,7 @@ class VideoSegmentAnnotator:
         info_frame = ttk.LabelFrame(main_frame, text="Video Information", padding="5")
         info_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
         
-        self.video_info_label = ttk.Label(info_frame, text="No videos found. Place video files in the 'videos' folder.")
+        self.video_info_label = ttk.Label(info_frame, text="No videos found. Use 'Choose Video Folder' or place video files in the 'videos' folder.")
         self.video_info_label.grid(row=0, column=0, sticky=tk.W)
         
         # Video display frame with fixed height
@@ -108,18 +121,21 @@ class VideoSegmentAnnotator:
         nav_frame = ttk.Frame(controls_frame)
         nav_frame.grid(row=0, column=0, columnspan=1, pady=(0, 10))
         
-        ttk.Button(nav_frame, text="⏮ Previous Video", command=self.previous_video).grid(row=0, column=0, padx=5)
-        ttk.Button(nav_frame, text="🔄 Reload Videos", command=self.load_videos).grid(row=0, column=1, padx=5)
-        ttk.Button(nav_frame, text="Next Video ⏭", command=self.next_video).grid(row=0, column=2, padx=5)
+        ttk.Button(nav_frame, text="📂 Choose Video Folder", command=self.choose_video_folder).grid(row=0, column=0, padx=5)
+        ttk.Button(nav_frame, text="⏮ Previous Video", command=self.previous_video).grid(row=0, column=1, padx=5)
+        ttk.Button(nav_frame, text="🔄 Reload Videos", command=self.load_videos).grid(row=0, column=2, padx=5)
+        ttk.Button(nav_frame, text="Next Video ⏭", command=self.next_video).grid(row=0, column=3, padx=5)
         
         # Playback controls
         play_frame = ttk.Frame(controls_frame)
         play_frame.grid(row=1, column=0, columnspan=1, pady=(0, 10))
         
         ttk.Button(play_frame, text="⏪", command=self.seek_backward, width=6).grid(row=0, column=0, padx=2)
+        ttk.Button(play_frame, text="◀", command=self.step_backward, width=6).grid(row=0, column=1, padx=2)
         self.play_button = ttk.Button(play_frame, text="▶", command=self.toggle_play, width=6)
-        self.play_button.grid(row=0, column=1, padx=2)
-        ttk.Button(play_frame, text="⏩", command=self.seek_forward, width=6).grid(row=0, column=2, padx=2)
+        self.play_button.grid(row=0, column=2, padx=2)
+        ttk.Button(play_frame, text="▶", command=self.step_forward, width=6).grid(row=0, column=3, padx=2)
+        ttk.Button(play_frame, text="⏩", command=self.seek_forward, width=6).grid(row=0, column=4, padx=2)
         
         # Progress bar
         progress_frame = ttk.Frame(controls_frame)
@@ -135,6 +151,14 @@ class VideoSegmentAnnotator:
         self.time_var = tk.StringVar(value="00:00 / 00:00")
         time_label = ttk.Label(progress_frame, textvariable=self.time_var, width=15)
         time_label.grid(row=0, column=1)
+        
+        # Frame counter display
+        frame_info_frame = ttk.Frame(controls_frame)
+        frame_info_frame.grid(row=3, column=0, columnspan=1, pady=(5, 0))
+        
+        self.frame_info_var = tk.StringVar(value="Frame: 0 / 0")
+        frame_info_label = ttk.Label(frame_info_frame, textvariable=self.frame_info_var)
+        frame_info_label.pack()
         
         # Annotation and dataset controls
         bottom_frame = ttk.Frame(main_frame)
@@ -185,7 +209,7 @@ class VideoSegmentAnnotator:
                   command=self.show_dataset_stats, width=18).grid(row=3, column=0, pady=2, sticky=(tk.W, tk.E))
         
         # Status bar
-        self.status_var = tk.StringVar(value="Ready - Place videos in the 'videos' folder and click 'Reload Videos'")
+        self.status_var = tk.StringVar(value="Ready - Use 'Choose Video Folder' to select videos or place them in the 'videos' folder")
         status_bar = ttk.Label(main_frame, textvariable=self.status_var, relief=tk.SUNKEN)
         status_bar.grid(row=5, column=0, sticky=(tk.W, tk.E), pady=(10, 0))
 
@@ -203,8 +227,8 @@ class VideoSegmentAnnotator:
                                    if not f.name.startswith('.')])
         
         if not self.video_files:
-            self.video_info_label.config(text="No videos found. Place video files (.mp4, .avi, .mov) in the 'videos' folder.")
-            self.status_var.set("No videos found - add videos to the 'videos' folder")
+            self.video_info_label.config(text=f"No videos found in: {self.videos_dir}\nSupported formats: .mp4, .avi, .mov")
+            self.status_var.set("No videos found - use 'Choose Video Folder' or add videos to the current folder")
             return
             
         self.video_files.sort()
@@ -235,6 +259,7 @@ class VideoSegmentAnnotator:
         # Update UI
         video_info = f"Video {self.current_video_index + 1}/{len(self.video_files)}: {self.current_video_path.name} | "
         video_info += f"Duration: {self.format_time(self.video_duration)} | FPS: {self.fps:.1f} | Frames: {self.total_frames}"
+        video_info += f"\nFolder: {self.videos_dir}"
         self.video_info_label.config(text=video_info)
         
         # Reset video state
@@ -287,6 +312,13 @@ class VideoSegmentAnnotator:
         self.progress_var.set(progress)
         self.time_var.set(f"{self.format_time(current_time)} / {self.format_time(self.video_duration)}")
         
+        # Update frame counter
+        self.frame_info_var.set(f"Frame: {self.current_frame + 1} / {self.total_frames}")
+        
+        # Update status with current position during playback
+        if self.is_playing:
+            self.status_var.set(f"Playing - Frame {self.current_frame + 1}/{self.total_frames} at {self.format_time(current_time)}")
+        
     def format_time(self, seconds):
         """Format time in MM:SS format"""
         minutes = int(seconds // 60)
@@ -302,16 +334,20 @@ class VideoSegmentAnnotator:
             self.play_video()
             
     def play_video(self):
-        """Play video in a separate thread"""
+        """Play video in a separate thread with improved speed"""
         def play_loop():
             while self.is_playing and self.current_frame < self.total_frames - 1:
                 self.current_frame += 1
                 self.root.after(0, self.update_video_display)
-                time.sleep(1.0 / self.fps if self.fps > 0 else 1.0 / 30)
+                
+                # Faster playback - reduced sleep time and adaptive to FPS
+                sleep_time = max(1.0 / (self.fps * 1.5), 0.01) if self.fps > 0 else 0.033
+                time.sleep(sleep_time)
                 
             if self.current_frame >= self.total_frames - 1:
                 self.is_playing = False
                 self.root.after(0, lambda: self.play_button.config(text="▶"))
+                self.root.after(0, lambda: self.status_var.set("Playback completed"))
                 
         if self.is_playing:
             threading.Thread(target=play_loop, daemon=True).start()
@@ -327,6 +363,18 @@ class VideoSegmentAnnotator:
         skip_frames = int(5 * self.fps)
         self.current_frame = max(self.current_frame - skip_frames, 0)
         self.update_video_display()
+        
+    def step_forward(self):
+        """Step forward one frame"""
+        if self.current_frame < self.total_frames - 1:
+            self.current_frame += 1
+            self.update_video_display()
+        
+    def step_backward(self):
+        """Step backward one frame"""
+        if self.current_frame > 0:
+            self.current_frame -= 1
+            self.update_video_display()
         
     def on_progress_change(self, value):
         """Handle progress bar changes"""
