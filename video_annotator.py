@@ -22,7 +22,7 @@ class VideoSegmentAnnotator:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Video Segment Annotator")
-        self.root.geometry("1400x900")
+        self.root.geometry("1200x800")  # More reasonable window size
         
         # Video variables
         self.cap = None
@@ -67,41 +67,46 @@ class VideoSegmentAnnotator:
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        # Configure grid weights
+        # Configure grid weights for responsive layout
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
-        main_frame.columnconfigure(1, weight=1)
-        main_frame.rowconfigure(1, weight=1)
+        main_frame.columnconfigure(0, weight=1)
+        main_frame.rowconfigure(2, weight=1)  # Video display gets weight
         
         # Title
         title_label = ttk.Label(main_frame, text="Video Segment Annotator", 
                                font=("Arial", 16, "bold"))
-        title_label.grid(row=0, column=0, columnspan=3, pady=(0, 10))
+        title_label.grid(row=0, column=0, columnspan=1, pady=(0, 10))
         
         # Video info frame
         info_frame = ttk.LabelFrame(main_frame, text="Video Information", padding="5")
-        info_frame.grid(row=1, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 10))
+        info_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
         
         self.video_info_label = ttk.Label(info_frame, text="No videos found. Place video files in the 'videos' folder.")
         self.video_info_label.grid(row=0, column=0, sticky=tk.W)
         
-        # Video display frame
+        # Video display frame with fixed height
         video_frame = ttk.LabelFrame(main_frame, text="Video Player", padding="5")
-        video_frame.grid(row=2, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+        video_frame.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
         video_frame.columnconfigure(0, weight=1)
         video_frame.rowconfigure(0, weight=1)
         
+        # Set minimum height for video frame
         self.video_label = ttk.Label(video_frame, text="No video loaded", anchor="center",
                                    background="black", foreground="white")
         self.video_label.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
+        # Limit video frame height
+        video_frame.grid_propagate(False)
+        video_frame.config(height=400)
+        
         # Controls frame
         controls_frame = ttk.LabelFrame(main_frame, text="Video Controls", padding="5")
-        controls_frame.grid(row=3, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 10))
+        controls_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
         
         # Video navigation buttons
         nav_frame = ttk.Frame(controls_frame)
-        nav_frame.grid(row=0, column=0, columnspan=3, pady=(0, 10))
+        nav_frame.grid(row=0, column=0, columnspan=1, pady=(0, 10))
         
         ttk.Button(nav_frame, text="⏮ Previous Video", command=self.previous_video).grid(row=0, column=0, padx=5)
         ttk.Button(nav_frame, text="🔄 Reload Videos", command=self.load_videos).grid(row=0, column=1, padx=5)
@@ -109,7 +114,7 @@ class VideoSegmentAnnotator:
         
         # Playback controls
         play_frame = ttk.Frame(controls_frame)
-        play_frame.grid(row=1, column=0, columnspan=3, pady=(0, 10))
+        play_frame.grid(row=1, column=0, columnspan=1, pady=(0, 10))
         
         ttk.Button(play_frame, text="⏪", command=self.seek_backward, width=6).grid(row=0, column=0, padx=2)
         self.play_button = ttk.Button(play_frame, text="▶", command=self.toggle_play, width=6)
@@ -118,7 +123,7 @@ class VideoSegmentAnnotator:
         
         # Progress bar
         progress_frame = ttk.Frame(controls_frame)
-        progress_frame.grid(row=2, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 5))
+        progress_frame.grid(row=2, column=0, columnspan=1, sticky=(tk.W, tk.E), pady=(0, 5))
         progress_frame.columnconfigure(0, weight=1)
         
         self.progress_var = tk.DoubleVar()
@@ -133,26 +138,26 @@ class VideoSegmentAnnotator:
         
         # Annotation and dataset controls
         bottom_frame = ttk.Frame(main_frame)
-        bottom_frame.grid(row=4, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 10))
+        bottom_frame.grid(row=4, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
         bottom_frame.columnconfigure(1, weight=1)
         
         # Annotation controls
         annotation_frame = ttk.LabelFrame(bottom_frame, text="Segment Annotation", padding="5")
-        annotation_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=(0, 10))
+        annotation_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=(0, 5))
         
-        ttk.Button(annotation_frame, text="📍 Mark Start", command=self.mark_start).grid(row=0, column=0, pady=2, sticky=(tk.W, tk.E))
-        ttk.Button(annotation_frame, text="🏁 Mark End", command=self.mark_end).grid(row=1, column=0, pady=2, sticky=(tk.W, tk.E))
-        ttk.Button(annotation_frame, text="↩️ Clear Last", command=self.clear_last_segment).grid(row=2, column=0, pady=2, sticky=(tk.W, tk.E))
-        ttk.Button(annotation_frame, text="🗑️ Clear All", command=self.clear_all_segments).grid(row=3, column=0, pady=2, sticky=(tk.W, tk.E))
+        ttk.Button(annotation_frame, text="📍 Mark Start", command=self.mark_start, width=15).grid(row=0, column=0, pady=2, sticky=(tk.W, tk.E))
+        ttk.Button(annotation_frame, text="🏁 Mark End", command=self.mark_end, width=15).grid(row=1, column=0, pady=2, sticky=(tk.W, tk.E))
+        ttk.Button(annotation_frame, text="↩️ Clear Last", command=self.clear_last_segment, width=15).grid(row=2, column=0, pady=2, sticky=(tk.W, tk.E))
+        ttk.Button(annotation_frame, text="🗑️ Clear All", command=self.clear_all_segments, width=15).grid(row=3, column=0, pady=2, sticky=(tk.W, tk.E))
         
         # Segments list
         segments_frame = ttk.LabelFrame(bottom_frame, text="Marked Segments", padding="5")
-        segments_frame.grid(row=0, column=1, sticky=(tk.W, tk.E, tk.N, tk.S), padx=(0, 10))
+        segments_frame.grid(row=0, column=1, sticky=(tk.W, tk.E, tk.N, tk.S), padx=(0, 5))
         segments_frame.columnconfigure(0, weight=1)
         segments_frame.rowconfigure(0, weight=1)
         
-        # Create treeview for segments
-        self.segments_tree = ttk.Treeview(segments_frame, columns=("start", "end", "duration"), show="headings", height=6)
+        # Create treeview for segments with fixed height
+        self.segments_tree = ttk.Treeview(segments_frame, columns=("start", "end", "duration"), show="headings", height=4)
         self.segments_tree.heading("start", text="Start Time")
         self.segments_tree.heading("end", text="End Time") 
         self.segments_tree.heading("duration", text="Duration")
@@ -171,18 +176,18 @@ class VideoSegmentAnnotator:
         export_frame.grid(row=0, column=2, sticky=(tk.W, tk.E, tk.N, tk.S))
         
         ttk.Button(export_frame, text="📤 Export Segments", 
-                  command=self.export_segments).grid(row=0, column=0, pady=2, sticky=(tk.W, tk.E))
+                  command=self.export_segments, width=18).grid(row=0, column=0, pady=2, sticky=(tk.W, tk.E))
         ttk.Button(export_frame, text="📊 Create Unified Dataset", 
-                  command=self.create_unified_dataset).grid(row=1, column=0, pady=2, sticky=(tk.W, tk.E))
+                  command=self.create_unified_dataset, width=18).grid(row=1, column=0, pady=2, sticky=(tk.W, tk.E))
         ttk.Button(export_frame, text="📂 Open Output Folder", 
-                  command=self.open_output_folder).grid(row=2, column=0, pady=2, sticky=(tk.W, tk.E))
+                  command=self.open_output_folder, width=18).grid(row=2, column=0, pady=2, sticky=(tk.W, tk.E))
         ttk.Button(export_frame, text="📈 View Dataset Stats", 
-                  command=self.show_dataset_stats).grid(row=3, column=0, pady=2, sticky=(tk.W, tk.E))
+                  command=self.show_dataset_stats, width=18).grid(row=3, column=0, pady=2, sticky=(tk.W, tk.E))
         
         # Status bar
         self.status_var = tk.StringVar(value="Ready - Place videos in the 'videos' folder and click 'Reload Videos'")
         status_bar = ttk.Label(main_frame, textvariable=self.status_var, relief=tk.SUNKEN)
-        status_bar.grid(row=5, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(10, 0))
+        status_bar.grid(row=5, column=0, sticky=(tk.W, tk.E), pady=(10, 0))
 
     def load_videos(self):
         """Load video files from the videos folder"""
@@ -253,10 +258,17 @@ class VideoSegmentAnnotator:
         ret, frame = self.cap.read()
         
         if ret:
-            # Resize frame for display
+            # Resize frame for display - more reasonable size
             height, width = frame.shape[:2]
-            display_width = 800
+            display_width = 600  # Reduced from 800
             display_height = int(height * display_width / width)
+            
+            # Limit display height to prevent UI overflow
+            max_display_height = 350
+            if display_height > max_display_height:
+                display_height = max_display_height
+                display_width = int(width * display_height / height)
+            
             frame_resized = cv2.resize(frame, (display_width, display_height))
             
             # Convert to RGB and then to PIL Image
